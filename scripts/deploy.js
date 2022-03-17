@@ -46,6 +46,34 @@ async function  deployA() {
   return facet;
 }
 
+
+async function removeA(diamond) {
+  const cut = []
+  const facet = await deployA();
+  cut.push({
+    facetAddress: "0x0000000000000000000000000000000000000000",
+    action: FacetCutAction.Remove,
+    functionSelectors: getSelectors(facet)
+  })
+  const diamondCut = await ethers.getContractAt('IDiamondCut', diamond)
+  const tx = await diamondCut.diamondCut(cut, "0x0000000000000000000000000000000000000000", [])
+  console.log('Diamond cut tx: ', tx.hash)
+  const receipt = await tx.wait()
+  if (!receipt.status) {
+    throw Error(`Diamond upgrade failed: ${tx.hash}`)
+  }
+  console.log('Completed diamond cut')
+  return diamond
+  /*
+  for (const FacetName of FacetNames) {
+    const Facet = await ethers.getContractFactory(FacetName)
+    const facet = await Facet.deploy()
+    await facet.deployed()
+    console.log(`${FacetName} deployed: ${facet.address}`)
+  }
+  */
+}
+
 async function replaceA(diamond) {
   const cut = []
   const facet = await deployA();
@@ -122,6 +150,7 @@ async function callA() {
 }
 
 //replaceA("0x162A433068F51e18b7d13932F27e66a3f99E6890")
+//removeA("0x162A433068F51e18b7d13932F27e66a3f99E6890")
 callA();
 
 exports.deployDiamond = deployDiamond
